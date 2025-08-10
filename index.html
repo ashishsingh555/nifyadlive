@@ -1,24 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>My Nifty Advance/Decline Page</title>
+  <meta charset="UTF-8">
+  <title>Nifty Advance/Decline Summary</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 50px;
-      background-color: #f0f0f0;
-      color: #333;
+      padding: 20px;
+      background: #f9f9f9;
     }
     h1 {
       color: #003366;
     }
+    table {
+      width: 100%;
+      max-width: 700px;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+    }
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    th {
+      background: #003366;
+      color: white;
+    }
+    .green {
+      color: green;
+      font-weight: bold;
+    }
+    .red {
+      color: red;
+      font-weight: bold;
+    }
+    .gray {
+      color: gray;
+    }
   </style>
 </head>
 <body>
-  <h1>Welcome to My Nifty Advance/Decline Page</h1>
-  <p>This is a simple placeholder page.</p>
-  <p>Upload your full code here once this works!</p>
+  <h1>Nifty Advance/Decline (Live)</h1>
+  <p>Using simulated weightage. Updates every minute.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Number of Stocks</th>
+        <th>Total Weight (%)</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <tr><td colspan="3">Loading...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    // Simulated weightages for major Nifty stocks
+    const stockWeights = {
+      "RELIANCE.NS": 10.2,
+      "TCS.NS": 8.1,
+      "INFY.NS": 7.4,
+      "HDFCBANK.NS": 9.3,
+      "ICICIBANK.NS": 8.0,
+      "SBIN.NS": 5.6,
+      "ITC.NS": 4.5,
+      "LT.NS": 3.8,
+      "KOTAKBANK.NS": 3.6,
+      "HINDUNILVR.NS": 3.4
+      // Add more Nifty 50 stocks for more accuracy
+    };
+
+    const symbols = Object.keys(stockWeights).join(',');
+
+    async function fetchData() {
+      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const quotes = data.quoteResponse.result;
+
+        let advCount = 0, decCount = 0, unchCount = 0;
+        let advWeight = 0, decWeight = 0, unchWeight = 0;
+
+        quotes.forEach(stock => {
+          const symbol = stock.symbol;
+          const prev = stock.regularMarketPreviousClose;
+          const curr = stock.regularMarketPrice;
+          const weight = stockWeights[symbol] || 0;
+
+          if (curr > prev) {
+            advCount++;
+            advWeight += weight;
+          } else if (curr < prev) {
+            decCount++;
+            decWeight += weight;
+          } else {
+            unchCount++;
+            unchWeight += weight;
+          }
+        });
+
+        const totalCount = advCount + decCount + unchCount;
+        const totalWeight = advWeight + decWeight + unchWeight;
+
+        const html = `
+          <tr>
+            <td class="green"><strong>Advancing</strong></td>
+            <td>${advCount} (${((advCount / totalCount) * 100).toFixed(1)}%)</td>
+            <td>${advWeight.toFixed(2)}%</td>
+          </tr>
+          <tr>
+            <td class="red"><strong>Declining</strong></td>
+            <td>${decCount} (${((decCount / totalCount) * 100).toFixed(1)}%)</td>
+            <td>${decWeight.toFixed(2)}%</td>
+          </tr>
+          <tr>
+            <td class="gray"><strong>Unchanged</strong></td>
+            <td>${unchCount} (${((unchCount / totalCount) * 100).toFixed(1)}%)</td>
+            <td>${unchWeight.toFixed(2)}%</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td>${totalCount}</td>
+            <td>${totalWeight.toFixed(2)}%</td>
+          </tr>
+        `;
+
+        document.getElementById('table-body').innerHTML = html;
+      } catch (e) {
+        document.getElementById('table-body').innerHTML = '<tr><td colspan="3">Error loading data.</td></tr>';
+        console.error(e);
+      }
+    }
+
+    fetchData();
+    setInterval(fetchData, 60000); // Refresh every 60s
+  </script>
 </body>
 </html>
