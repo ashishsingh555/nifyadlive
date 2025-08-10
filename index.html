@@ -77,7 +77,7 @@
     const symbols = Object.keys(stockWeights).join(',');
 
     async function fetchData() {
-      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
+      const url = `https://corsproxy.io/?https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols}`;
       try {
         const res = await fetch(url);
         const data = await res.json();
@@ -133,7 +133,7 @@
         document.getElementById('table-body').innerHTML = html;
       } catch (e) {
         document.getElementById('table-body').innerHTML = '<tr><td colspan="3">Error loading data.</td></tr>';
-        console.error(e);
+        console.error("Fetch error:", e);
       }
     }
 
